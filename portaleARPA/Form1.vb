@@ -14,6 +14,7 @@ Public Class Form1
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+
         connectionString = ConfigurationManager.ConnectionStrings("GLOBAL_CONN_STR").ConnectionString
         DateTimePicker1.Value = Date.Now.AddYears(-1)
         culture = System.Globalization.CultureInfo.CreateSpecificCulture("en-US")
@@ -21,34 +22,48 @@ Public Class Form1
 
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Async Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
 
         reportType = ComboBox2.SelectedIndex
         section = 8
         Dim startDate As Date = DateTimePicker1.Value
         Dim endDate As Date = DateTimePicker2.Value
+        ProgressBar1.Location = New Point(465, 501)
+        ProgressBar1.Visible = True
+        ProgressBar1.Maximum = 100
+        Dim progress As New Progress(Of Integer)(Sub(v)
+                                                     ' Questo lambda viene eseguito nel contesto del thread della GUI
+                                                     ' Quindi può aggiornare in sicurezza i controlli del modulo
+                                                     ProgressBar1.Value = v
+                                                 End Sub)
 
-        GetData(startDate, endDate, section, reportType)
-
+        ' Esegui l'operazione in un altro thread
+        Await Task.Run(Sub() GetData(progress, startDate, endDate, section, reportType))
+        ProgressBar1.Visible = False
+        Button1.Enabled = False
+        Button2.Visible = True
+        Button3.Visible = True
     End Sub
 
-    Private Async Sub GetData(startTime As Date, endTime As Date, section As Int32, type As Int32)
+    Private Async Sub GetData(progress As IProgress(Of Integer), startTime As Date, endTime As Date, section As Int32, type As Int32)
 
         Dim command As System.Data.SqlClient.SqlCommand
         Dim command2 As System.Data.SqlClient.SqlCommand
         Dim reader As System.Data.SqlClient.SqlDataReader
         Dim connection As New SqlConnection(connectionString)
         Dim connection2 As New SqlConnection(connectionString)
+        Dim queryNumber As Integer = 0
+        Dim queriesCount As Integer = 4
+        Dim progressStep As Integer = 100 \ queriesCount
 
         Try
             ' Tenta di aprire la connessione
             connection.Open()
             connection2.Open()
-            MessageBox.Show("Connessione al database riuscita!", "Successo", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
             ' Gestione degli errori
             MessageBox.Show("Errore durante la connessione al database: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
-
+            Return
         End Try
 
         Dim testCMD As Data.SqlClient.SqlCommand = New Data.SqlClient.SqlCommand("sp_AQMSNT_FILL_ARPA_MASSICI_CAMINI_NODELETE", connection)
@@ -68,47 +83,35 @@ Public Class Form1
 
         testCMD.ExecuteScalar()
         ret = testCMD.Parameters("@retval").Value
+        queryNumber += 1
+        progress.Report(queryNumber * progressStep)
 
         testCMD.Parameters("@idsez").Value = 1
         testCMD.ExecuteScalar()
 
+        queryNumber += 1
+        progress.Report(queryNumber * progressStep)
+
         ret2 = testCMD.Parameters("@retval").Value
         Dim log_statement As String = "SELECT * FROM [ARPA_WEB_MASSICI_CAMINI] WHERE IDX_REPORT = " & ret.ToString() & " AND TIPO_DATO IS NULL ORDER BY INS_ORDER"
         command = New System.Data.SqlClient.SqlCommand(log_statement, connection)
+
         reader = command.ExecuteReader()
         log_statement = "SELECT * FROM [ARPA_WEB_MASSICI_CAMINI] WHERE IDX_REPORT = " & ret2.ToString() & " AND TIPO_DATO IS NULL ORDER BY INS_ORDER"
         command2 = New System.Data.SqlClient.SqlCommand(log_statement, connection2)
         Dim reader2 As System.Data.SqlClient.SqlDataReader
         reader2 = command2.ExecuteReader()
+        queryNumber += 1
+        progress.Report(queryNumber * progressStep)
 
         If (reader.HasRows) Then
-            While reader.Read()
-                reader2.Read()
-                Console.WriteLine(String.Format("Il valore NOX è: {0}", reader("E1Q_NOX")))
-                Console.WriteLine(String.Format("Il valore SO2 è: {0}", reader("E1Q_SO2")))
-                Console.WriteLine(String.Format("Il valore SO2 è: {0}", reader("E1Q_POLVERI")))
-            End While
+            queryNumber += 1
+            progress.Report(queryNumber * progressStep)
+        Else
+            MessageBox.Show("Nessun dato trovato per l'anno selezionato! ")
         End If
 
 
-        Button1.Enabled = False
-
-
-
-        'ProgressBar1.Location = New Point(465, 501)
-        'ProgressBar1.Visible = True
-
-
-        ' For i As Integer = 1 To 4
-        'Await Task.Delay(5000) ' Simula un lavoro lungo in modo asincrono
-        'ProgressBar1.Value += 25
-        'Next
-
-
-        'ProgressBar1.Visible = False
-
-        Button2.Visible = True
-        Button3.Visible = True
 
     End Sub
 

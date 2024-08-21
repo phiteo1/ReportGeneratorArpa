@@ -32,9 +32,9 @@ Partial Class Form1
         Me.Button1 = New System.Windows.Forms.Button()
         Me.Button2 = New System.Windows.Forms.Button()
         Me.Button3 = New System.Windows.Forms.Button()
-        Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
         Me.DateTimePicker1 = New System.Windows.Forms.DateTimePicker()
         Me.DateTimePicker2 = New System.Windows.Forms.DateTimePicker()
+        Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
         Me.SuspendLayout()
         '
         'Label1
@@ -142,14 +142,6 @@ Partial Class Form1
         Me.Button3.UseVisualStyleBackColor = True
         Me.Button3.Visible = False
         '
-        'ProgressBar1
-        '
-        Me.ProgressBar1.Location = New System.Drawing.Point(90, 618)
-        Me.ProgressBar1.Name = "ProgressBar1"
-        Me.ProgressBar1.Size = New System.Drawing.Size(200, 23)
-        Me.ProgressBar1.TabIndex = 12
-        Me.ProgressBar1.Visible = False
-        '
         'DateTimePicker1
         '
         Me.DateTimePicker1.CustomFormat = "yyyy"
@@ -169,6 +161,14 @@ Partial Class Form1
         Me.DateTimePicker2.ShowUpDown = True
         Me.DateTimePicker2.Size = New System.Drawing.Size(200, 20)
         Me.DateTimePicker2.TabIndex = 14
+        '
+        'ProgressBar1
+        '
+        Me.ProgressBar1.Location = New System.Drawing.Point(90, 618)
+        Me.ProgressBar1.Name = "ProgressBar1"
+        Me.ProgressBar1.Size = New System.Drawing.Size(146, 23)
+        Me.ProgressBar1.TabIndex = 12
+        Me.ProgressBar1.Visible = False
         '
         'Form1
         '
@@ -205,7 +205,7 @@ Partial Class Form1
     Friend WithEvents Button1 As Button
     Friend WithEvents Button2 As Button
     Friend WithEvents Button3 As Button
-    Friend WithEvents ProgressBar1 As ProgressBar
     Friend WithEvents DateTimePicker1 As DateTimePicker
     Friend WithEvents DateTimePicker2 As DateTimePicker
+    Friend WithEvents ProgressBar1 As ProgressBar
 End Class
